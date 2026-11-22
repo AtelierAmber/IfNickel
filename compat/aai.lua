@@ -80,7 +80,7 @@ if mods["jetpack"] then
 end
 
 if mods["space-exploration"] then
-  rm.AddProductRaw("se-scrap-hard-recycling", {type="item", name="nickel-ore", amount=1, probability=0.05})
+  rm.AddProductRaw("se-scrap-hard-recycling", {type="item", name="nickel-ore", amount=1, independent_probability=0.05})
 
   if parts.experimental then
 
@@ -189,11 +189,14 @@ if mods["space-exploration"] then
 
     local function add_catalyst(recipe, ingredient, amount, losschance, scrap, scrap_amount)
       rm.AddIngredient(recipe, ingredient, amount)
-      rm.AddProductRaw(recipe, {type="item", name=ingredient, amount=amount, probability=1.0 - losschance, ignored_by_productivity=amount, ignored_by_stats=amount})
       if scrap then
-        rm.AddProductRaw(recipe, {type="item", name=scrap, amount=scrap_amount, probability=losschance})
+        local chance = 1.0 - losschance
+        rm.AddProductRaw(recipe, {type="item", name=ingredient, amount=amount, shared_probability = {min = 0, max = chance}, ignored_by_productivity=amount, ignored_by_stats=amount})
+        rm.AddProductRaw(recipe, {type="item", name=scrap, amount=scrap_amount, shared_probability = {min = chance, max = 1}})
+      else
+        rm.AddProductRaw(recipe, {type="item", name=ingredient, amount=amount, independent_probability=1.0 - losschance, ignored_by_productivity=amount, ignored_by_stats=amount})
       end
-    end
+  end
 
     if settings.startup["ifnickel-se-maintenance"].value then
       -- Research. 25% magnet fail chance
@@ -369,7 +372,7 @@ if mods["space-exploration"] then
           icon_size = 64, icon_mipmaps = 4, scale = 0.25
         }
       },
-      category = "hard-recycling",
+      categories = {"hard-recycling"},
       energy_required = 1,
       ingredients = {{type="item", name="nickel-ore", amount=50}},
       results = {{type="item", name="landfill", amount=1}},
